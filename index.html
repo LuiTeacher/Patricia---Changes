@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tense Tutor Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: 220 20% 12%; --card: 220 20% 18%; --text: 220 20% 90%; --border: 220 15% 25%; --accent: #a855f7; }
+        body { font-family: 'Inter', sans-serif; color: hsl(var(--text)); background: hsl(var(--bg)); }
+        .section-header { background: linear-gradient(90deg, #3b82f6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .card { background: hsl(var(--card)); border-radius: 1rem; padding: 1.5rem; border: 1px solid hsl(var(--border)); }
+        .tab-btn { padding: 0.75rem 1.25rem; border-radius: 0.75rem; transition: 0.3s; text-align: left; background: hsl(var(--bg)); color: #94a3b8; }
+        .tab-active { background: var(--accent); color: white; }
+        .input-field { background: #2d3748; border: 1px solid hsl(var(--border)); padding: 0.4rem; border-radius: 0.5rem; color: white; text-align: center; width: 140px; }
+        .feedback { font-size: 0.85rem; margin-top: 0.5rem; font-weight: 500; }
+        .correct { color: #4ade80; } .incorrect { color: #f87171; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="pb-6 mb-8 border-b border-gray-700 flex justify-between items-center">
+            <h1 class="text-3xl font-bold section-header">Tense Tutor Online</h1>
+            <span class="text-gray-500 hidden md:inline">Past Simple vs. Present Continuous</span>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <nav class="flex flex-col gap-3">
+                <button class="tab-btn tab-active" id="btn-intro" onclick="show('intro')">Overview</button>
+                <button class="tab-btn" id="btn-grammar" onclick="show('grammar')">Still & Anymore</button>
+                <button class="tab-btn" id="btn-quiz" onclick="show('quiz')">Student Quiz</button>
+            </nav>
+
+            <main id="content" class="md:col-span-3 card">
+                </main>
+        </div>
+    </div>
+
+    <script>
+        const formspreeUrl = "https://formspree.io/f/xjggejvw";
+        const questions = [
+            { q: "I ________ (live) in London in 2015, but I ________ (still / live) in Paris now.", a: ["lived", "am still living"] },
+            { q: "We ________ (have) a landline, but we don't use it ________ (anymore).", a: ["had", "anymore"] },
+            { q: "The rain ________ (start) at noon and it ________ (still / rain) outside.", a: ["started", "is still raining"] },
+            { q: "I ________ (watch) cartoons as a kid, but I don't watch them ________.", a: ["watched", "anymore"] },
+            { q: "She ________ (lose) her keys yesterday and she ________ (still / look) for them.", a: ["lost", "is still looking"] },
+            { q: "Prices ________ (be) low last winter, but they ________ (get) higher every day.", a: ["were", "are getting"] },
+            { q: "He ________ (be) a chef for years, but he doesn't cook ________.", a: ["was", "anymore"] },
+            { q: "My car ________ (break) down; that's why I ________ (still / walk) to work.", a: ["broke", "am still walking"] },
+            { q: "The company ________ (hire) me in 2022, and I ________ (still / work) there.", a: ["hired", "am still working"] },
+            { q: "I ________ (like) that band before, but I don't listen to them ________.", a: ["liked", "anymore"] }
+        ];
+
+        let results = {};
+
+        function show(section) {
+            const main = document.getElementById('content');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+            document.getElementById('btn-' + section).classList.add('tab-active');
+
+            if (section === 'intro') {
+                main.innerHTML = `<h2 class="text-2xl font-bold mb-4">Tracking Change</h2><p>Practice contrasting finished past actions with current trends.</p>`;
+            } else if (section === 'grammar') {
+                main.innerHTML = `<h2 class="text-2xl font-bold mb-4 text-purple-400">Still & Anymore</h2><p class="mb-4">Use <b>Still</b> for ongoing actions and <b>Anymore</b> for stopped habits.</p>`;
+            } else {
+                main.innerHTML = `<h2 class="text-2xl font-bold mb-4 text-purple-400">Student Quiz</h2>
+                    <input type="text" id="name" placeholder="Enter Student Name" class="input-field w-full mb-6 text-left px-4">
+                    <div id="q-list" class="space-y-6"></div>
+                    <button id="send-btn" onclick="send()" class="hidden mt-8 w-full bg-green-600 p-3 rounded-xl font-bold hover:bg-green-500 transition shadow-lg">Send Answers to Teacher</button>`;
+                renderQuiz();
+            }
+        }
+
+        function renderQuiz() {
+            const list = document.getElementById('q-list');
+            questions.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = "p-4 bg-[#1a202c] rounded-lg border border-gray-700";
+                div.innerHTML = `<p class="mb-3">${i+1}. ${item.q.replace('________', `<input type="text" id="a${i}x" class="input-field mx-1">`).replace('________', `<input type="text" id="a${i}y" class="input-field mx-1">`)}</p>
+                    <button onclick="check(${i})" id="lock${i}" class="text-xs bg-gray-600 px-3 py-1 rounded hover:bg-gray-500 transition">Confirm Answer</button>
+                    <div id="f${i}" class="feedback"></div>`;
+                list.appendChild(div);
+            });
+        }
+
+        function check(i) {
+            const x = document.getElementById(`a${i}x`).value.trim().toLowerCase();
+            const y = document.getElementById(`a${i}y`).value.trim().toLowerCase();
+            const correct = (x === questions[i].a[0] && y === questions[i].a[1]);
+            
+            results[i] = { ans: `${x} / ${y}`, status: correct ? "✅" : "❌" };
+            document.getElementById(`f${i}`).innerHTML = `<span class="${correct ? 'correct' : 'incorrect'}">Confirmed</span>`;
+            
+            // Disable inputs and button after confirming
+            document.getElementById(`a${i}x`).disabled = true;
+            document.getElementById(`a${i}y`).disabled = true;
+            document.getElementById(`lock${i}`).disabled = true;
+            document.getElementById(`lock${i}`).style.opacity = "0.5";
+
+            // Show send button only after all 10 are confirmed
+            if (Object.keys(results).length === questions.length) {
+                document.getElementById('send-btn').classList.remove('hidden');
+            }
+        }
+
+        async function send() {
+            const name = document.getElementById('name').value.trim();
+            if (!name) return alert("Please enter your name first!");
+            
+            const btn = document.getElementById('send-btn');
+            btn.innerText = "Sending Results...";
+            btn.disabled = true;
+            
+            const score = Object.values(results).filter(r => r.status === "✅").length;
+            const report = Object.entries(results).map(([i, r]) => `Q${parseInt(i)+1}: ${r.ans} (${r.status})`).join('\n');
+
+            try {
+                const response = await fetch(formspreeUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        student_name: name, 
+                        total_score: `${score}/10`, 
+                        details: report 
+                    })
+                });
+                if (response.ok) {
+                    alert("Success! Your teacher has received your results.");
+                    btn.innerText = "Sent Successfully!";
+                } else {
+                    throw new Error();
+                }
+            } catch (e) { 
+                alert("Error sending. Please check your connection."); 
+                btn.innerText = "Send Answers to Teacher";
+                btn.disabled = false;
+            }
+        }
+
+        show('intro');
+    </script>
+</body>
+</html>
